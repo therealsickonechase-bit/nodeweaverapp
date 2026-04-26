@@ -1,0 +1,75 @@
+🛠
+Prereqs (Termux from F-Droid)
+Install Termux and Termux:API from F-Droid (the Play Store builds are stale and broken). Then run:
+
+One-time pkg setup
+pkg install -y git curl jq python ruby termux-api
+▶ QR
+📋
+📦
+Toolkit installers
+RF custom installer (Metasploit + Nuclei + btlejack)
+curl -fsSL "https://nodeweaverapp.com/api/toolkit/installer.sh" | bash
+▶ QR
+📋
+Full toolkit (WiFi + BLE + cellular + base)
+curl -fsSL "https://nodeweaverapp.com/api/toolkit/setup.sh" | bash
+▶ QR
+📋
+WiFi only
+curl -fsSL "https://nodeweaverapp.com/api/toolkit/setup.sh?category=wifi" | bash
+▶ QR
+📋
+Bluetooth / BLE only
+curl -fsSL "https://nodeweaverapp.com/api/toolkit/setup.sh?category=bluetooth" | bash
+▶ QR
+📋
+Cellular / IMSI only
+curl -fsSL "https://nodeweaverapp.com/api/toolkit/setup.sh?category=cellular" | bash
+▶ QR
+📋
+🤖
+OS-BOT CLI shim
+Talk to the live network agent from any shell — pipes through /api/os-bot.
+
+Persistent install (~/bin/osbot)
+curl -fsSL "https://nodeweaverapp.com/api/os-bot.sh" -o /tmp/osbot.sh && bash /tmp/osbot.sh install
+▶ QR
+📋
+One-shot question
+curl -fsSL "https://nodeweaverapp.com/api/os-bot.sh" | bash -s -- "any threats?"
+▶ QR
+📋
+📡
+Discovery manifest
+JSON document an Android companion app can fetch to enumerate every installer, CLI, API endpoint, and deep-link intent this host exposes.
+
+Manifest URL
+https://nodeweaverapp.com/api/android/manifest.json
+▶ QR
+📋
+Inspect with jq
+curl -fsSL "https://nodeweaverapp.com/api/android/manifest.json" | jq .
+▶ QR
+📋
+Live schema probe
+curl -fsSL "https://nodeweaverapp.com/api/probe" | jq .
+▶ QR
+📋
+Open manifest →
+🔗
+Deep-link intents
+Companion Android apps can register the nodeweaver:// scheme to receive shared text from the system share sheet. Web fallback always works.
+
+Ask OS-BOT (intent)
+nodeweaver://osbot/ask?q=any%20threats%3F
+▶ QR
+📋
+Mint bounty (intent)
+nodeweaver://bounty/mint?flow_id=dna-vector-01
+▶ QR
+📋
+Web fallback
+https://nodeweaverapp.com/?osbot=any%20threats%3F
+▶ QR
+📋
