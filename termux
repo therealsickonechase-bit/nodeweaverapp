@@ -1,0 +1,108 @@
+
+Bob Bone <bobbone960@gmail.com>
+10:55 AM (1 minute ago)
+to me, ringquistchase@gmail.com, tips
+
+"#!/data/data/com.termux/files/usr/bin/bash
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# Termux RF/Network installer â€” Metasploit + Nuclei + btlejack
+# Git-clone + ~/bin wrapper flow only (no APKs).
+#
+# Prereqs (one time):
+#   pkg install -y git curl jq python ruby termux-api
+#   # plus the Termux:API Android app from F-Droid for termux-toast
+#
+# LEGAL: Run only against networks/devices you own or have written
+# authorization to test.
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+set -euo pipefail
+
+# ---------- CONFIG ----------
+INSTALL_BASE="$HOME/opt"
+MSF_DIR="$INSTALL_BASE/metasploit"
+NUCLEI_DIR="$INSTALL_BASE/nuclei"
+BTLEJACK_DIR="$INSTALL_BASE/btlejack"
+
+MSF_REPO="https://github.com/rapid7/metasploit-framework.git"
+NUCLEI_REPO="https://github.com/projectdiscovery/nuclei.git"
+BTLEJACK_REPO="https://github.com/virtualabs/btlejack.git"
+# ----------------------------
+
+# ---------- Network check (Termux:API) ----------
+echo "[*] Checking network..."
+NET_INFO="$(termux-wifi-connectioninfo 2>/dev/null || echo '{}')"
+SSID="$(echo "$NET_INFO" | jq -r '.ssid // empty')"
+IP="$(echo   "$NET_INFO" | jq -r '.ip   // empty')"
+
+if [ -z "$IP" ]; then
+  termux-toast "No Wi-Fi IP â€” checking mobile data..." || true
+  CELL_INFO="$(termux-telephony-deviceinfo 2>/dev/null || echo '{}')"
+  IP="$(echo "$CELL_INFO" | jq -r '.network_operator_name // empty')"
+fi
+
+if [ -z "$IP" ]; then
+  termux-toast "No network connectivity" || true
+  echo "[-] No network connectivity. Aborting."
+  exit 1
+fi
+
+termux-toast "Network OK: SSID=${SSID:-n/a} IP=${IP}" || true
+echo "[+] Network OK: SSID=${SSID:-n/a} IP=${IP}"
+
+# ---------- Prepare dirs ----------
+mkdir -p "$INSTALL_BASE"
+cd "$INSTALL_BASE"
+
+# ---------- Git clones ----------
+if [ ! -d "$MSF_DIR" ]; then
+  echo "[*] Cloning Metasploit to $MSF_DIR..."
+  git clone --depth 1 "$MSF_REPO" "$MSF_DIR"
+else
+  echo "[=] Metasploit already cloned."
+fi
+
+if [ ! -d "$NUCLEI_DIR" ]; then
+  echo "[*] Cloning Nuclei to $NUCLEI_DIR..."
+  git clone --depth 1 "$NUCLEI_REPO" "$NUCLEI_DIR"
+else
+  echo "[=] Nuclei already cloned."
+fi
+
+if [ ! -d "$BTLEJACK_DIR" ]; then
+  echo "[*] Cloning btlejack to $BTLEJACK_DIR..."
+  git clone --depth 1 "$BTLEJACK_REPO" "$BTLEJACK_DIR"
+else
+  echo "[=] btlejack already cloned."
+fi
+
+termux-toast "Metasploit, Nuclei, btlejack cloned under $INSTALL_BASE" || true
+
+# ---------- ~/bin wrappers ----------
+BIN_WRAP="$HOME/bin"
+mkdir -p "$BIN_WRAP"
+
+cat > "$BIN_WRAP/msfconsole" <<EOF
+#!/data/data/com.termux/files/usr/bin/bash
+cd "$MSF_DIR" && ./msfconsole "\$@"
+EOF
+
+cat > "$BIN_WRAP/nuclei" <<EOF
+#!/data/data/com.termux/files/usr/bin/bash
+cd "$NUCLEI_DIR" && ./nuclei "\$@"
+EOF
+
+cat > "$BIN_WRAP/btlejack" <<EOF
+#!/data/data/com.termux/files/usr/bin/bash
+cd "$BTLEJACK_DIR" && python btlejack.py "\$@"
+EOF
+
+chmod +x "$BIN_WRAP/msfconsole" "$BIN_WRAP/nuclei" "$BIN_WRAP/btlejack"
+
+if ! grep -q 'HOME/bin' "$HOME/.bashrc" 2>/dev/null; then
+  echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
+fi
+
+termux-toast "Wrappers ready in ~/bin (PATH updated in .bashrc)" || true
+echo "[+] Done. Run: source ~/.bashrc""
+
+ 
